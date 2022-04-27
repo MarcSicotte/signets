@@ -8,9 +8,9 @@ import couvertureDefaut from '../images/couverture-defaut.webp';
 import { formaterDate } from '../code/helper';
 import { useState } from 'react';
 import * as dossierModele from '../code/dossier-modele';
-import ModificationDossier from './ModificationDossier';
+import FrmDossier from './FrmDossier';
 
-export default function Dossier({dossiers, setDossiers, uid, id, titre, couleur, dateModif, couverture, supprimerDossier, modifierDossier}) {
+export default function Dossier({id, titre, couleur, dateModif, couverture, supprimerDossier, modifierDossier, ajouterSignet}) {
   // État du menu contextuel
   const [eltAncrage, setEltAncrage] = useState(null);
   const ouvertMenu = Boolean(eltAncrage);
@@ -27,7 +27,7 @@ export default function Dossier({dossiers, setDossiers, uid, id, titre, couleur,
     setEltAncrage(null);
   };
 
-  function gererFormulaireModifier() {
+  function afficherFormulaireDossier() {
     // Ouvrir le formulaire de modification du dossier (transférer l'info sir le
     // dossier dans le formulaire) ...
     setOuvertFrm(true);
@@ -52,14 +52,48 @@ export default function Dossier({dossiers, setDossiers, uid, id, titre, couleur,
   catch(e) {
     couverture = couvertureDefaut;
   }
+
+  //État dropzone
+  const [dropzone, setDropzone] = useState(false);
+
+  function gererDragEnter(evt){
+    evt.preventDefault();
+    setDropzone(true);
+  }
+
+  function gererDragOver(evt){
+    evt.preventDefault();
+  }
+
+  function gererDragLeave(evt){
+    evt.preventDefault();
+    setDropzone(false);
+
+  }
+
+  function gererDrop(evt){
+    evt.preventDefault();
+    setDropzone(false);
+    console.log("URL de l'adresse glisser: ", evt.dataTransfer.getData("URL") ) // prend les infos récolter dans l'evenement drop puis le montre dans la console
+    let url = evt.dataTransfer.getData("URL");
+
+    //On appelle la méthode d'ajout d'un signet dans un dossier définie dans le composant
+    //parent es passée ici en props
+    //Elle prend deux arguments : id du dossier et chaine de l'url glissée/déposée
+    ajouterSignet(id.url);
+  }
+
+
+
   return (
     // Remarquez l'objet JS donné à la valeur de l'attribut style en JSX, voir : 
     // https://reactjs.org/docs/dom-elements.html#style
-    <article className="Dossier" style={{backgroundColor: couleur}}>
-      <div className="couverture">
-        <IconButton className="deplacer" aria-label="déplacer" disableRipple={true}>
+    <article className={"Dossier" + (dropzone ? ' dropzone': '')} onDrop={gererDrop} onDragOver={gererDragOver} onDragEnter={gererDragEnter} onDragLeave={gererDragLeave}  style={{backgroundColor: couleur}}>
+      <IconButton className="deplacer" aria-label="déplacer" disableRipple={true}>
           <SortIcon />
         </IconButton>
+      <div className="couverture">
+        
         <img src={couverture || couvertureDefaut} alt={titre}/>
       </div>
       <div className="info">
@@ -83,10 +117,10 @@ export default function Dossier({dossiers, setDossiers, uid, id, titre, couleur,
           horizontal: 'right',
         }}
       >
-        <MenuItem onClick={gererFormulaireModifier}>Modifier</MenuItem>
+        <MenuItem onClick={afficherFormulaireDossier}>Modifier</MenuItem>
         <MenuItem onClick={gererSupprimer}>Supprimer</MenuItem>
       </Menu>
-      <ModificationDossier modifierDossier={modifierDossier} ouvert={ouvertFrm} setOuvert={setOuvertFrm} id={id} titre_p={titre} couleur_p={couleur} couverture_p={couverture}  />
+      <FrmDossier gererActionDossier={modifierDossier} ouvert={ouvertFrm} setOuvert={setOuvertFrm} id={id} titre_p={titre} couleur_p={couleur} couverture_p={couverture}  />
     </article>
   );
 }
